@@ -1,0 +1,10 @@
+build/
+*.o
+*.exe
+*.so
+*.dylib
+.DS_Store
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
