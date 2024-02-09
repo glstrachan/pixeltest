@@ -5,74 +5,36 @@
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 
-#define WIDTH 640
-#define HEIGHT 480
+#include "ShaderUtils.hpp"
+#include "TextureUtils.hpp"
+
+#define WIDTH 480
+#define HEIGHT 270
 
 #define SCALE 2
-
-std::string readShaderSource(const char *filePath)
-{
-    std::ifstream file(filePath);
-    if (!file) {
-        std::cerr << "Unable to open file " << filePath << std::endl;
-        std::cerr << "Make sure you are running the project from the root directory" << std::endl;
-        return "";
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string shaderSource = buffer.str();
-
-    return shaderSource;
-}
-
-void checkShaderCompilation(GLuint shader, const char* shaderType) {
-    GLint isCompiled = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-    if(isCompiled == GL_FALSE) {
-        GLint maxLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-
-        char* errorLog = new char[maxLength];
-        glGetShaderInfoLog(shader, maxLength, &maxLength, errorLog);
-
-        std::cerr << shaderType << " shader compilation failed: " << errorLog << std::endl;
-
-        delete[] errorLog;
-        glDeleteShader(shader);
-    } else {
-        std::cout << shaderType << " shader compiled successfully.\n";
-    }
-}
 
 void error_callback(int error, const char *description)
 {
     std::cerr << "GLFW Error: " << description << std::endl;
 }
 
-int main(int argc, char **argv)
+GLFWwindow *setupWindow()
 {
     glfwSetErrorCallback(error_callback);
 
     // Initialize GLFW
     if (!glfwInit())
-    {
         std::cerr << "ERROR: could not start GLFW3" << std::endl;
-        return 1;
-    }
 
     // Setting window properties
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);                 // Ensure using OpenGL 3.3
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // This line is crucial for macOS compatibility
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
@@ -82,14 +44,22 @@ int main(int argc, char **argv)
     {
         std::cerr << "ERROR: could not open window with GLFW3" << std::endl;
         glfwTerminate();
-        return 1;
     }
+
     glfwMakeContextCurrent(window);
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
     glewInit();
 
+    return window;
+}
+
+int main(int argc, char **argv)
+{
+    GLFWwindow *window = setupWindow();
+
+    // Cube vertices move somewhere else
     GLfloat vertices[] = {
         -0.5f, -0.5f, -0.5f,
         0.5f, -0.5f, -0.5f,
@@ -144,62 +114,117 @@ int main(int argc, char **argv)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Create, compile, and link the vertex shader
-    std::string vertShaderStr = readShaderSource("shaders/vertex.glsl");
-    const char *vertexShaderSource = vertShaderStr.c_str();
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    checkShaderCompilation(vertexShader, "Vertex Shader");
-
-    // Create, compile, and link the fragment shader
-    std::string fragShaderStr = readShaderSource("shaders/fragment.glsl");
-    const char *fragmentShaderSource = fragShaderStr.c_str();
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    checkShaderCompilation(fragmentShader, "Fragment Shader");
-
-    // Create shader program and attach shaders to it
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
     // IMPORTANT: Specify the layout of the vertex data
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
     glEnableVertexAttribArray(0);
 
-    // Unbind VBO and VAO
+    // Unbind VBO and VAO as the active buffers
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // TODO Move this somewhere else probably
+    GLuint shaderProgram = createProgram("shaders/cubeVertex.glsl", "shaders/cubeFragment.glsl");
 
     // Orthographic Camera Stuff
     glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
 
+    GLuint dirtTexture = loadTextureFromFile("assets/textures/dirt.png");
+    glBindTexture(GL_TEXTURE_2D, dirtTexture);
+
+    // Stuff for screen texturing
+    GLfloat screenVertices[] = {
+        -1.0f,
+        -1.0f,
+        0.0f,
+        1.0f,
+        -1.0f,
+        0.0f,
+        -1.0f,
+        1.0f,
+        0.0f,
+        1.0f,
+        1.0f,
+        0.0f,
+        1.0f,
+        -1.0f,
+        0.0f,
+        -1.0f,
+        1.0f,
+        0.0f,
+    };
+
+    GLuint screenVAO, screenVBO;
+    glGenVertexArrays(1, &screenVAO);
+    glBindVertexArray(screenVAO);
+    glGenBuffers(1, &screenVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, screenVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(screenVertices), screenVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    GLuint screenShaderProgram = createProgram("shaders/screenVertex.glsl", "shaders/screenFragment.glsl");
+
+    GLuint screenFBO;
+    glGenFramebuffers(1, &screenFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+
+    GLuint screenTexture;
+    glGenTextures(1, &screenTexture);
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // Change to GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Change to GL_NEAREST
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);
+
+    unsigned int RBO;
+    glGenRenderbuffers(1, &RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     // Game loop
     while (!glfwWindowShouldClose(window))
     {
-        // Check and call events
-        glfwPollEvents();
-
-        // Render
+        // Render to the screenFBO
+        glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+        glViewport(0, 0, WIDTH, HEIGHT);
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Draw the triangle
         glUseProgram(shaderProgram);
         GLuint cameraPosLoc = glGetUniformLocation(shaderProgram, "cameraPos");
         glUniform3f(cameraPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
 
-        glBindVertexArray(VAO);
+        glBindTexture(GL_TEXTURE_2D, dirtTexture);
+
+        glBindVertexArray(VAO);           
         glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+
+        // Render the quad with the scene texture
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        int framebufferWidth, framebufferHeight; // Stupid crap because apple high dpi display or smth
+        glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+        glViewport(0, 0, framebufferWidth, framebufferHeight);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(screenShaderProgram); // Use the shader for rendering the textured quad
+        glBindVertexArray(screenVAO);
+        glBindTexture(GL_TEXTURE_2D, screenTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
+
+        // Check and call events
+        glfwPollEvents();
     }
 
     // De-allocate resources

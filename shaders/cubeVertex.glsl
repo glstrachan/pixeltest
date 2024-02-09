@@ -5,6 +5,9 @@ uniform vec3 cameraPos;
 
 out vec3 FaceCoord;
 
+#define WIDTH 480.0
+#define HEIGHT 270.0
+
 void main() {
     mat4 rotationMatrix = mat4(1.0,  0.0,        0.0,         0.0,
                                0.0,  0.70710678, -0.70710678, 0.0,
@@ -15,7 +18,7 @@ void main() {
     vec3 scaledPos = position * 0.5;
 
     // Scale based on aspect ratio
-    vec3 ratioPos = scaledPos * vec3(480.0 / 640.0, 1.0, 1.0);
+    vec3 ratioPos = scaledPos * vec3(HEIGHT / WIDTH, 1.0, 1.0);
 
     // Do the camera translation
     vec3 translatedPos = ratioPos - cameraPos;
