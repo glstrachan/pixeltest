@@ -1,23 +1,23 @@
 #include "Camera.hpp"
 
-Camera::Camera(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up, Mode mode)
+Camera::Camera(const glm::vec3 &position, const glm::vec3 &target, const glm::vec3 &up, Mode mode)
     : position(position), target(target), up(glm::normalize(up)), mode(mode) {
 }
 
-Camera::Camera(const glm::vec3& position, const glm::vec3& direction, float distance, const glm::vec3& up, Mode mode)
+Camera::Camera(const glm::vec3 &position, const glm::vec3 &direction, float distance, const glm::vec3 &up, Mode mode)
     : position(position), up(glm::normalize(up)), mode(mode) {
     target = position + glm::normalize(direction) * distance;
 }
 
-void Camera::setPosition(const glm::vec3& newPosition) {
+void Camera::setPosition(const glm::vec3 &newPosition) {
     position = newPosition;
 }
 
-void Camera::setTarget(const glm::vec3& newTarget) {
+void Camera::setTarget(const glm::vec3 &newTarget) {
     target = newTarget;
 }
 
-void Camera::setUp(const glm::vec3& newUp) {
+void Camera::setUp(const glm::vec3 &newUp) {
     up = glm::normalize(newUp);
 }
 

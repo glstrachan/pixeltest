@@ -5,4 +5,4 @@
 
 #include <iostream>
 
-unsigned int loadTextureFromFile(const char* filename);
+unsigned int loadTextureFromFile(const char *filename);
