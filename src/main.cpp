@@ -173,11 +173,19 @@ int main(int argc, char **argv)
     glGenTextures(1, &screenTexture);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // Change to GL_NEAREST
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Change to GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);
+    GLuint depthTexture;
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     unsigned int RBO;
     glGenRenderbuffers(1, &RBO);
@@ -193,13 +201,14 @@ int main(int argc, char **argv)
         // Render to the screenFBO
         glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
         glViewport(0, 0, WIDTH, HEIGHT);
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClearColor(0.2f, 0.9f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
         GLuint cameraPosLoc = glGetUniformLocation(shaderProgram, "cameraPos");
         glUniform3f(cameraPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
 
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, dirtTexture);
 
         glBindVertexArray(VAO);           
@@ -214,9 +223,14 @@ int main(int argc, char **argv)
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(screenShaderProgram); // Use the shader for rendering the textured quad
+        glUseProgram(screenShaderProgram);
+        glUniform1i(glGetUniformLocation(screenShaderProgram, "screenTexture"), 0);
+        glUniform1i(glGetUniformLocation(screenShaderProgram, "depthTexture"), 1);
         glBindVertexArray(screenVAO);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, screenTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
@@ -231,6 +245,10 @@ int main(int argc, char **argv)
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
+
+    glDeleteVertexArrays(1, &screenVAO);
+    glDeleteBuffers(1, &screenVBO);
+    glDeleteProgram(screenShaderProgram);
 
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();

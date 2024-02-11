@@ -4,6 +4,8 @@ out vec4 FragColor;
 in vec2 UV;
 
 uniform sampler2D screenTexture;
+uniform sampler2D depthTexture;
+
 
 void main()
 {
