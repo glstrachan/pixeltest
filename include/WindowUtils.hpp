@@ -41,7 +41,7 @@ GLFWwindow *setupWindow() {
     glewExperimental = GL_TRUE;
     glewInit();
 
-    // Very important idiot
+    // Very important idiot (depth wont be rendered)
     glEnable(GL_DEPTH_TEST); 
 
     return window;

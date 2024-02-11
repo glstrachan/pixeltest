@@ -24,7 +24,7 @@ class TexturePass : public RenderPass {
 
     GLfloat vertices[18] = {
         -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, 0.5f, 0.0f,
-        0.5f,  0.5f,  0.0f, 0.5f, -0.5f, 0.0f, -0.5f, 0.5f, 0.0f,
+        0.0f,  0.0f,  0.0f, 0.0f, -0.0f, 0.0f, -0.0f, 0.0f, 0.0f,
     };
 
     const glm::vec3 &cameraPos;
