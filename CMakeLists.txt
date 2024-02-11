@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(PixelTest)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Include directories
@@ -13,18 +13,13 @@ find_package(glfw3 REQUIRED)
 
 include(FetchContent)
 
-# Save the original CMAKE_BUILD_TYPE
-set(ORIGINAL_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
-
 # Fetch GLM with maximum optimization
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
   GIT_TAG        bf71a834948186f4097caa076cd2663c69a10e1e
 )
-set(CMAKE_BUILD_TYPE Release) # Set build type to Release for dependency
 FetchContent_MakeAvailable(glm)
-set(CMAKE_BUILD_TYPE ${ORIGINAL_CMAKE_BUILD_TYPE}) # Restore original CMAKE_BUILD_TYPE
 
 # Fetch GLEW from custom repository with maximum optimization
 FetchContent_Declare(
@@ -35,9 +30,31 @@ FetchContent_Declare(
 FetchContent_GetProperties(glew)
 if(NOT glew_POPULATED)
   FetchContent_Populate(glew)
-  set(CMAKE_BUILD_TYPE Release) # Set build type to Release for dependency
   add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR} EXCLUDE_FROM_ALL)
-  set(CMAKE_BUILD_TYPE ${ORIGINAL_CMAKE_BUILD_TYPE}) # Restore original CMAKE_BUILD_TYPE
+endif()
+
+# Fetch stb_image.h from the stb library
+FetchContent_Declare(
+  stb
+  GIT_REPOSITORY https://github.com/nothings/stb.git
+  GIT_TAG        master
+)
+FetchContent_GetProperties(stb)
+if(NOT stb_POPULATED)
+  FetchContent_Populate(stb)
+  include_directories(${stb_SOURCE_DIR})
+endif()
+
+# Fetch ECS
+FetchContent_Declare(
+  ecs
+  GIT_REPOSITORY https://github.com/redxdev/ECS.git
+  GIT_TAG        master  # Specify a commit hash or tag for reproducibility
+)
+FetchContent_GetProperties(ecs)
+if(NOT ecs_POPULATED)
+  FetchContent_Populate(ecs)
+  include_directories(${ecs_SOURCE_DIR})
 endif()
 
 # Include directories for OpenGL and GLFW

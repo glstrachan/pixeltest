@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     while (!glfwWindowShouldClose(window)) {
         time += 0.01;
 
-        cameraPos = glm::vec3(0.0, 0.5f * sin(time), -0.5f * sin(time));
+        cameraPos = glm::vec3(0.5f * sin(time), 0.0, -0.5f * sin(time));
 
         texturePass.render();
         screenPass.render();

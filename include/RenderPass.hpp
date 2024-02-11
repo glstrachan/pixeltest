@@ -4,9 +4,9 @@
 #include <glm/ext.hpp>
 #include <glm/vec3.hpp>
 
-#include "WindowUtils.hpp"
 #include "ShaderUtils.hpp"
 #include "TextureUtils.hpp"
+#include "WindowUtils.hpp"
 
 class RenderPass {
   public:
@@ -52,22 +52,22 @@ class TexturePass : public RenderPass {
     }
 
     void render() override {
-      glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-      glViewport(0, 0, WIDTH, HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+        glViewport(0, 0, WIDTH, HEIGHT);
 
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      glUseProgram(shaderProgram);
+        glUseProgram(shaderProgram);
 
-      GLuint cameraPosLoc = glGetUniformLocation(shaderProgram, "cameraPos");
-      glUniform3f(cameraPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
+        GLuint cameraPosLoc = glGetUniformLocation(shaderProgram, "cameraPos");
+        glUniform3f(cameraPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
 
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
 
-      glBindVertexArray(VAO);
-      glDrawArrays(GL_TRIANGLES, 0, 6);
-      glBindVertexArray(0);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
     }
 
     ~TexturePass() {

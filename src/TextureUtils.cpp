@@ -1,7 +1,7 @@
 #include "TextureUtils.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "StbImage.hpp"
+#include "stb_image.h"
 
 GLuint loadTextureFromFile(const char *filename) {
     GLuint texture;
