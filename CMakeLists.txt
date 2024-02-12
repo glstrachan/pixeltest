@@ -13,7 +13,7 @@ find_package(glfw3 REQUIRED)
 
 include(FetchContent)
 
-# Fetch GLM with maximum optimization
+# Fetch GLM
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
@@ -21,7 +21,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
-# Fetch GLEW from custom repository with maximum optimization
+# Fetch GLEW
 FetchContent_Declare(
   glew
   GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
@@ -33,7 +33,7 @@ if(NOT glew_POPULATED)
   add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-# Fetch stb_image.h from the stb library
+# Fetch stb
 FetchContent_Declare(
   stb
   GIT_REPOSITORY https://github.com/nothings/stb.git
@@ -45,17 +45,14 @@ if(NOT stb_POPULATED)
   include_directories(${stb_SOURCE_DIR})
 endif()
 
-# Fetch ECS
+# Fetch EnTT
 FetchContent_Declare(
-  ecs
-  GIT_REPOSITORY https://github.com/redxdev/ECS.git
-  GIT_TAG        master  # Specify a commit hash or tag for reproducibility
+  entt
+  GIT_REPOSITORY https://github.com/skypjack/entt.git
+  GIT_TAG v3.12.2
 )
-FetchContent_GetProperties(ecs)
-if(NOT ecs_POPULATED)
-  FetchContent_Populate(ecs)
-  include_directories(${ecs_SOURCE_DIR})
-endif()
+FetchContent_MakeAvailable(entt)
+
 
 # Include directories for OpenGL and GLFW
 include_directories(${OPENGL_INCLUDE_DIR})
@@ -67,4 +64,4 @@ file(GLOB PROJECT_SOURCES "src/*.cpp")
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 
 # Link the executable with OpenGL, GLFW, GLEW, and GLM
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} glfw libglew_static)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} glfw libglew_static EnTT::EnTT)

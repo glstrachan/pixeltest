@@ -98,8 +98,6 @@ class ScreenPass : public RenderPass {
     void setup() override {
         shaderProgram = createProgram("shaders/screenVertex.glsl", "shaders/screenFragment.glsl");
 
-        glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
 
@@ -137,6 +135,7 @@ class ScreenPass : public RenderPass {
 
     void render() override {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
         glViewport(0, 0, framebufferWidth, framebufferHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

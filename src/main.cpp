@@ -1,10 +1,20 @@
-#include "Camera.hpp"
 #include "RenderPass.hpp"
 #include "ShaderUtils.hpp"
 #include "TextureUtils.hpp"
 #include "WindowUtils.hpp"
 
+#include "Components.hpp"
+#include "Systems.hpp"
+#include <entt/entt.hpp>
+
 int main(int argc, char **argv) {
+    entt::registry registry;
+    auto camera = registry.create();
+    registry.emplace<TargetPosition>(camera);
+    registry.emplace<ActualPosition>(camera);
+    SnappingSystem snappingSystem;
+
+    // Window setup
     GLFWwindow *window = setupWindow();
 
     // Set up data to for render passes
@@ -19,12 +29,10 @@ int main(int argc, char **argv) {
     ScreenPass screenPass(screenFBO, window);
     screenPass.setup();
 
-    double time = 0.0;
-
     while (!glfwWindowShouldClose(window)) {
-        time += 0.01;
-
-        cameraPos = glm::vec3(0.5f * sin(time), 0.0, -0.5f * sin(time));
+        snappingSystem.update(registry, 0.001f);
+        auto actual = registry.get<ActualPosition>(camera);
+        cameraPos = glm::vec3(actual.x, actual.y, actual.z);
 
         texturePass.render();
         screenPass.render();
@@ -34,6 +42,8 @@ int main(int argc, char **argv) {
         glfwPollEvents();
     }
 
+    registry.destroy(camera);
     glfwTerminate();
+
     return 0;
 }

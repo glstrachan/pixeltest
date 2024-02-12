@@ -24,5 +24,13 @@ void main()
     float difference = max(depthL - depth, max(depthR - depth, max(depthT - depth, depthB - depth)));
     float outline = 1.0 + (difference > 0.01 ? 1.0 : 0.0);
 
-    FragColor = vec4(outline * texture(screenTexture, UV / 2.0 + 0.5).xyz, 1.0);
+    vec3 composite = outline * texture(screenTexture, UV / 2.0 + 0.5).xyz;
+
+    vec2 floorUV = UV / 2.0 + 0.5;
+    floorUV = vec2(floor(floorUV.x * 480.0), floor(floorUV.y * 270.0));
+    float checkers = mod(floorUV.x + floorUV.y, 2.0);
+
+    float nothing = composite.x + composite.y + composite.z == 0.0 ? 1.0 : 0.0;
+
+    FragColor = vec4(nothing * checkers * vec3(1.0, 0.0, 1.0) + composite, 1.0);
 }
